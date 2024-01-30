@@ -1,0 +1,172 @@
+---
+title: "Homework 2"
+author: "Arjun Yenamandra - SDS 315 UT Austin"
+
+
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r global_options, echo=FALSE}
+knitr::opts_chunk$set(fig.height=4, fig.width=7, warning=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60), warning = FALSE, message = FALSE)
+```
+eid: ay7654
+github: [https://github.com/macksed/HW2](https://github.com/macksed/HW2)
+```{r, echo=FALSE, results='hide'}
+library(tidyverse)
+library(ggplot2)
+```
+# **Question 1**
+
+```{r echo=FALSE}
+profs <- read.csv('profs.csv')
+prof <- ggplot(profs)
+```
+
+```{r echo=FALSE}
+prof + geom_histogram(aes(x=eval),binwidth = .1) + labs(title = paste('Distribution of course evaluation scores'))
+```
+
+
+
+This histogram displays the overall data distribution of course eval scores, from 1 to 5. The distribution peaks around a score of 4. 
+
+```{r echo=FALSE}
+prof + geom_boxplot(aes(x=eval)) + facet_wrap(~native) + labs(title = paste('Distribution of eval scores for Native(yes) and Non-Native(no) English Speakers'))
+#hist(profs[profs$native=='no',]$eval, main = "")
+```
+
+
+
+These boxplots display the differences in eval score distribution among native and non native english speakers. Native english speakers have a higher median eval score, as well as better scored quartiles disregarding a few outliers.
+
+```{r echo=FALSE}
+prof + geom_histogram(aes(x=eval)) + facet_wrap(~gender, nrow=2) +  labs(title = paste('Distribution of eval scores faceted by gender'))
+```
+
+
+This faceted histogram shows that the distribution among genders is fairly even for course evaluation scores.
+
+```{r echo=FALSE}
+prof + geom_point(aes(x=beauty, y = eval)) + labs(title = paste('Scatterplot of eval scores against beauty of prof.'))
+```
+
+
+Looking at the scatterplot we can reason that there is virtually no association between beauty and eval scores.
+
+# **Question 2**
+```{r echo=FALSE}
+bike <- read.csv("bikeshare.csv")
+```
+
+```{r echo=FALSE}
+avgrental <- bike %>% group_by(hr) %>% summarize(avg = mean(total))
+bikes <- ggplot(avgrental)
+bikes + geom_line(aes(x=hr,y=avg)) + labs(title = paste('Line graph of average bike rentals(avg) across hours of the day(hr)'))
+```
+
+
+
+Here we plot average bike ridership by person, against hours of the day. This line graph shows that average hourly bike rentals peaks at ~17.4 hours, and has a lower peak at ~7.7 hours. Rentals rampantly pick up from 5-7 hrs and 15-17 hrs. We can see this visually as the somewhat bimodal trend which forms from our mentioned peaks.
+
+```{r echo=FALSE}
+workrental = bike %>% group_by(hr, workingday) %>% summarize(avg = mean(total))
+ggplot(workrental) + geom_line(aes(x=hr, y=avg)) + facet_wrap(~workingday) + labs(title = paste('Line graph of avg bike rentals hrs faceted by if it is a working day(0=no, 1=yes)'),
+       y = "Avg rentals",
+       x = "Hour of Day")
+```
+
+
+
+Here we are comparing average ridership against hours in the day, which is then split between wokring and non working days. We can understand that the working days have much higher peaks in terms of average rentals, but there is a bimodal distribution. On the other hand, the non working days have 1 peak, which is maintained through the day.
+
+```{r echo=FALSE}
+sitrental = bike %>% filter(hr==9) %>% group_by(weathersit, workingday) %>% summarize(avg = mean(total))
+
+ggplot(sitrental) + geom_col(aes(x=factor(weathersit), y=avg)) + facet_wrap(~workingday) + labs(title = paste('Bar plot of avg ridership during 9th hr by weather faceted by if it is a working day'),
+       x = "Weather Situation",
+       y = "Avg Ridership")
+
+```
+
+
+
+
+Here we must treat the weathersit categories as a factor/categorical variable. With this we see that our faceted plot only has the first 3 weather conditions and thus our facet has a comparable distribution. We can see that when the weather is in 3(Light Snow, Light Rain + Thunderstorm + Scattered clouds, Light Rain + Scattered clouds) we have the lowest avg rentals in both plots. During working days on the 9th hour, we can see that weather has little effect on ridership, as it every bar is larger or near equivalent to non working day ridership for any weather condition. This plot is looking at a smaller subset of our data, and is more representative of the 9th hour trends rather than the entire ridership trends.
+
+
+# **Question 3**
+```{r echo=FALSE}
+capmetro_UT = read.csv("capmetro_UT.csv")
+capmetro_UT = mutate(capmetro_UT,
+day_of_week = factor(day_of_week,
+levels=c("Mon", "Tue", "Wed","Thu", "Fri", "Sat", "Sun")),
+month = factor(month,
+levels=c("Sep", "Oct","Nov")))
+```
+
+```{r echo=FALSE}
+hours = capmetro_UT %>% group_by(hour_of_day,month,day_of_week) %>% summarize(avgboard = mean(boarding))
+
+ggplot(hours) + geom_line(aes(x=hour_of_day, y=avgboard,color=month)) + facet_wrap(~day_of_week) + labs(title = paste('Line graph of avg boardings across hour of day split by days of week & month'),
+       x = "Hour",
+       y = "Avg Boardings")
+```
+
+
+Our y represents average boardings, while x represents the hour of the day. It seems that our peak boardings is relatively the same among all weekdays, while weekends are very low. Mondays in September are equal to or lower than any other weekday/month combo besides November Fridays. This may be due to Labor Day being on a September Monday. November W/Th/F may be lower due to the Thanksgiving break. Fridays may also have proclivity for less boarding as people may take work off on Friday.
+
+```{r echo=FALSE}
+ggplot(capmetro_UT) + geom_point(aes(x=temperature,y=boarding,color=weekend)) + facet_wrap(~hour_of_day) + labs(title = "Relationship of temperature and boardings faceted by hour of the day")
+
+```
+
+
+This plot shows x, temperature in terms of Fahrenheit and y, people boarding during some interval. These axes are then split by if it is a weekend or weekday, and then faceted to split among the hours of metro operation(6AM-10PM). In holding hour and weekday status constant, we can view that the temperature actually may have an effect on boarding numbers. To prove such, we have to see if boarding drops off when temperature is lower or higher.In hours 6-11, we see that temperatures reach 40s and below, and that there are some people boarding at those temps. With this we can notice that overall boarding numbers do slightly drop off around 40 degrees, but the drop off is so drastic that it cannot be described as a noticeable effect. If there was a stronger trend where boarding numbers gradually dropped then maybe we could assume there is a noticeable effect on boarding by temperature.
+
+# **Question 4**
+```{r echo=FALSE}
+billboard  = read.csv("billboard.csv")
+```
+
+```{r echo=FALSE}
+head(billboard %>% group_by(song,performer) %>% summarize(count = n()) %>% arrange(desc(count)),10)
+```
+This table shows the top 10 artists and songs with the most amount of weeks on the Billboard top 100.
+
+```{r echo=FALSE}
+uniqued <- billboard %>% filter(year != 1958 & year != 2021) %>% group_by(year) %>% summarize(unique_songs = length(unique(song)))
+ggplot(uniqued) + geom_line(aes(x=year,y=unique_songs)) +  labs(title = "Musical Diversity over time",
+       x = "Year",
+       y = "# of Unique Songs") 
+```
+
+
+
+This graph displays the relationship between the year and the amount of unique songs on the Billboard 100.
+We can see that back in the 1960's, there were many unique songs on the Billboard, but as the 2000's reached, the amount of unique songs swiftly dropped. Following the 2000's, the number of unique songs shot up tremendously, and reached insane growth in the 2020's.
+
+```{r echo=FALSE}
+tenhit <- billboard %>%
+  group_by(performer) %>%
+  filter(weeks_on_chart >= 10) %>%
+  summarize(hits = n_distinct(song)) %>%
+  filter(hits >= 30)
+
+
+
+ggplot(tenhit, aes(x = fct_reorder(performer, hits), y = hits)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Top Artists with at Least 30 Ten-Week Hits",
+       x = "Performer",
+       y = "Number of Ten-Week Hits") + coord_flip()
+
+
+
+```
+
+
+This bar plot shows the 19 artists with 30 or more songs with 10 weeks or more on the Billboard top 100 chart. We can see that Elton John tops the chart in the 50s, while a majority of the artists on the list do not surpass 35 songs.
+
